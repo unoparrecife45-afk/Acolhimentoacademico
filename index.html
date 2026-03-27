@@ -11,633 +11,347 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
 
     <style>
         :root {
             --primary: #0f172a; --accent: #2563eb; --whatsapp: #25D366;
             --danger: #ef4444; --bg: #f1f5f9; --card: #ffffff;
-            --border: #e2e8f0; --warning: #f59e0b; --info: #3b82f6;
+            --border: #e2e8f0; --warning: #f59e0b;
         }
 
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); margin: 0; padding-top: 90px; color: #334155; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; padding-top: 80px; color: #334155; }
         
+        /* Barra Superior de Segurança */
         #safety-bar {
-            position: fixed; top: 0; left: 0; right: 0; height: 75px;
+            position: fixed; top: 0; left: 0; right: 0; height: 70px;
             background: #1e293b; color: white; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; z-index: 1000; font-weight: bold; transition: background 0.5s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            justify-content: center; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
         #safety-bar.locked { background: var(--danger); }
-        #safety-bar.waiting { background: var(--warning); }
         #safety-bar.safe { background: var(--whatsapp); }
-        #safety-sub { font-size: 11px; opacity: 0.9; font-weight: normal; margin-top: 2px; }
 
         .container { max-width: 1300px; margin: 0 auto; padding: 20px; }
-        .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; flex-wrap: wrap; }
-        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748b; transition: 0.2s; background: transparent; }
-        .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        
+        /* Navegação por Abas */
+        .tab-nav { display: flex; gap: 10px; margin-bottom: 20px; background: #e2e8f0; padding: 5px; border-radius: 10px; }
+        .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; color: #64748b; background: transparent; transition: 0.3s; }
+        .tab-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
 
         .tab-content { display: none; background: var(--card); padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .tab-content.active { display: block; }
 
-        .btn { padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
+        /* Estilos de Tabela e Formulários */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; }
+        th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid var(--border); color: #475569; }
+        td { padding: 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        
+        .btn { padding: 10px 18px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-primary { background: var(--accent); color: white; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; text-decoration: none; font-size: 11px; padding: 6px 10px; border-radius: 4px; display: inline-block; cursor: pointer; border: none; }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-whatsapp { background: var(--whatsapp); color: white; font-size: 11px; padding: 6px 10px; text-decoration: none; border-radius: 4px; }
         .btn-success { background: #10b981; color: white; }
         
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; font-family: inherit; }
-        .editor-toolbar { background: #f8fafc; padding: 15px; border: 1px solid var(--border); border-radius: 8px 8px 0 0; border-bottom: none; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-        textarea#msg_template { border-radius: 0 0 8px 8px; border-top: 1px solid var(--border); margin-top: 0; min-height: 120px; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
+        .comment-input { font-size: 12px; height: 60px; resize: none; border-color: #cbd5e1; background: #fffdf5; }
 
-        .table-wrap { overflow-x: auto; max-height: 550px; border: 1px solid var(--border); border-radius: 8px; margin-top: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 13px; }
-        th { background: #f8fafc; padding: 12px; text-align: left; position: sticky; top: 0; z-index: 10; border-bottom: 2px solid var(--border); color: #475569; }
-        td { padding: 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
-        select.status-select { width: auto; padding: 4px 6px; font-size: 12px; margin: 0; }
+        /* Estilização do PDF (Área de Impressão) */
+        #pdf-export-zone { padding: 50px; background: white; color: black; border: 1px solid #eee; width: 100%; box-sizing: border-box; }
+        .pdf-header { text-align: center; margin-bottom: 35px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+        .pdf-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 25px 0; }
+        .stat-box { border: 1px solid #ddd; padding: 15px; text-align: center; border-radius: 8px; background: #fafafa; }
         
-        .report-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px; }
-        .stat-card { background: #f8fafc; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
-        .stat-number { font-size: 28px; font-weight: bold; color: var(--accent); }
-        .comment-box { background: #fff7e6; border-left: 5px solid var(--warning); padding: 15px; margin-top: 20px; font-style: italic; }
-        .report-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-        #report-container { transition: all 0.3s; padding: 20px; background: white; border: 1px solid #eee; }
-        
-        .student-notes-summary { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
-        .student-note-item { margin-bottom: 10px; padding: 10px; background: #fff; border: 1px solid #eee; border-radius: 5px; }
+        .auto-summary { 
+            background: #f1f5f9; border-left: 6px solid #2563eb; 
+            padding: 20px; margin: 20px 0; line-height: 1.6; font-style: italic; color: #1e3a8a;
+        }
 
-        .auto-summary-box { background: #f0f7ff; border-left: 4px solid var(--accent); padding: 20px; margin: 20px 0; line-height: 1.6; font-style: italic; color: #1e40af; }
-
-        /* PDF Styles */
-        #pdf-render-area { padding: 40px; background: white; color: black; border: 1px solid #eee; width: 100%; box-sizing: border-box; }
-        .pdf-header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .pdf-footer { margin-top: 50px; text-align: center; border-top: 1px solid #000; padding-top: 10px; width: 300px; margin-left: auto; margin-right: auto; }
-        .signature-font { font-family: 'Dancing Script', cursive; font-size: 1.5rem; color: #000; font-weight: bold; }
-        
-        .pdf-header p { margin: 5px 0; }
-        
+        /* Estilo da Assinatura Manual (Conforme imagem solicitada) */
+        .signature-area { margin-top: 70px; text-align: center; }
+        .signature-name { 
+            font-family: 'Dancing Script', cursive; 
+            font-size: 32px; 
+            color: #000; 
+            display: block;
+            margin-bottom: -5px;
+        }
+        .signature-line { border-top: 1px solid #000; width: 300px; display: inline-block; padding-top: 5px; text-align: center; font-size: 11px; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="safety-bar" class="safe">
-        <div id="safety-main">✅ SISTEMA PRONTO</div>
-        <div id="safety-sub">Monitoramento de segurança ativo</div>
+        <div id="safety-main">✅ SISTEMA DE ACOLHIMENTO ATIVO</div>
+        <div id="safety-sub">Conectado ao Banco: acolhimentoacademico-92f02</div>
     </div>
 
     <div class="container">
         <div class="tab-nav">
-            <button class="tab-btn active" onclick="switchTab('tab-import')">1. Configurar & Importar Alunos</button>
-            <button class="tab-btn" onclick="switchTab('tab-manage')">2. Gestão & Notas</button>
-            <button class="tab-btn" onclick="switchTab('tab-reports')">3. Relatório de Acolhimento</button>
+            <button class="tab-btn active" onclick="switchTab('tab-import')">1. Importar Alunos</button>
+            <button class="tab-btn" onclick="switchTab('tab-manage')">2. Gestão de Acolhimento</button>
+            <button class="tab-btn" onclick="switchTab('tab-reports')">3. Relatório para Gestão</button>
         </div>
 
         <div id="tab-import" class="tab-content active">
             <h2>Configurar Mensagem de Boas-vindas</h2>
-            <div class="editor-toolbar">
-                <small style="font-weight: bold; color: #64748b;">Variáveis: [NOME] [UNIDADE] [CURSO] [CUMPRIMENTO] (automático: Bom dia/Boa tarde/Boa noite) e {opção1|opção2} para variação.</small>
-                <button onclick="saveTemplate()" class="btn btn-primary btn-sm">💾 Salvar Modelo</button>
-            </div>
-            <textarea id="msg_template" placeholder="Digite sua mensagem...">[CUMPRIMENTO] [NOME]! Vimos que você iniciou sua jornada no curso de [CURSO]. Como podemos te ajudar hoje?</textarea>
+            <textarea id="msg_template" style="height: 100px;">[CUMPRIMENTO] [NOME]! Sou da Unopar e estou entrando em contato para te dar as boas-vindas ao curso de [CURSO]. Como está sua primeira semana? Alguma dúvida?</textarea>
             
-            <div style="background: #f8fafc; padding: 20px; margin-top: 15px; border: 2px dashed #cbd5e1; text-align: center;">
+            <div style="background: #f8fafc; padding: 30px; margin-top: 20px; border: 2px dashed #cbd5e1; text-align: center; border-radius: 10px;">
                 <input type="file" id="csv_file" accept=".csv">
-                <p style="font-size: 12px; color: #64748b; margin-top: 5px;">CSV: RA; Nome; Telefone; Unidade; Curso</p>
+                <p style="color: #64748b; font-size: 12px;">Padrão CSV: RA; Nome; Telefone; Unidade; Curso</p>
             </div>
-            <button onclick="processCSV()" class="btn btn-primary" style="width: 100%; margin-top: 20px; justify-content: center;">🚀 Sincronizar Base de Alunos</button>
+            <button onclick="processCSV()" class="btn btn-primary" style="width: 100%; margin-top: 20px; justify-content: center;">🚀 Carregar Nova Base de Alunos</button>
         </div>
 
         <div id="tab-manage" class="tab-content">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="search_term" placeholder="🔍 Buscar Nome ou RA..." onkeyup="applyFiltersAndRender()">
-                <select id="f_unidade" onchange="applyFiltersAndRender()"><option value="">Todas Unidades</option></select>
-                <select id="f_status" onchange="applyFiltersAndRender()">
-                    <option value="">Todos Status</option>
+            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px;">
+                <input type="text" id="search_term" placeholder="🔍 Buscar por Nome ou RA..." onkeyup="renderTable()">
+                <select id="f_status" onchange="renderTable()">
+                    <option value="">Filtrar por Status</option>
                     <option value="Pendente">Pendente</option>
                     <option value="Enviado">Enviado</option>
                     <option value="Contato Incorreto">Contato Incorreto</option>
                 </select>
-                <button onclick="bulkDeleteSelected()" class="btn btn-danger" style="font-size: 12px;">🗑️ Excluir Selecionados</button>
-                <button onclick="bulkUpdateStatus('Enviado')" class="btn btn-primary btn-sm">📨 Marcar selecionados como Enviado</button>
+                <button onclick="loadFromFirebase()" class="btn btn-primary btn-sm">🔄 Sincronizar Dados</button>
             </div>
 
-            <div class="table-wrap">
-                 <table>
-                    <thead>
-                         <tr>
-                            <th width="30"><input type="checkbox" onclick="toggleAll(this)"></th>
-                            <th>RA / ID</th>
-                            <th>Nome do Aluno (A-Z)</th>
-                            <th>Unidade</th>
-                            <th>Curso</th>
-                            <th>Status</th>
-                            <th width="300">Notas Acadêmicas / Situação</th>
-                            <th>Ação</th>
-                         </tr>
-                    </thead>
-                    <tbody id="table_body"></tbody>
-                 </table>
-            </div>
+            <table>
+                <thead>
+                     <tr>
+                        <th>RA / ID</th>
+                        <th>Aluno / Curso</th>
+                        <th>Status</th>
+                        <th width="350">Notas de Triagem (Feedbacks)</th>
+                        <th>Ação</th>
+                     </tr>
+                </thead>
+                <tbody id="table_body"></tbody>
+            </table>
         </div>
 
         <div id="tab-reports" class="tab-content">
-            
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px; background: #f8fafc; padding: 20px; border-radius: 10px;">
                 <div>
-                    <label>👤 Nome do Operador(a):</label>
-                    <input type="text" id="rep_operador" placeholder="Seu nome completo" oninput="saveReportInfo()">
+                    <label>👤 Seu Nome (Operador):</label>
+                    <input type="text" id="rep_operador" placeholder="Seu nome completo" oninput="updateReportView()">
                 </div>
                 <div>
-                    <label>🏫 Unidade Trabalhada:</label>
-                    <input type="text" id="rep_unidade" placeholder="Ex: Unopar - Recife" oninput="saveReportInfo()">
+                    <label>🏫 Unidade da Operação:</label>
+                    <input type="text" id="rep_unidade" placeholder="Ex: Unopar Recife" oninput="updateReportView()">
                 </div>
                 <div style="display: flex; align-items: flex-end;">
-                     <button onclick="generatePDF()" class="btn btn-success" style="width: 100%;">📄 Gerar Relatório PDF</button>
+                    <button onclick="generatePDF()" class="btn btn-success" style="width: 100%;">📄 Baixar Relatório PDF</button>
                 </div>
             </div>
 
-            <div id="pdf-render-area">
+            <div id="pdf-export-zone">
                 <div class="pdf-header">
-                    <h1 style="margin:0; letter-spacing: 1px;">RELATÓRIO ACOLHIMENTO AO ALUNO</h1>
-                    <p id="pdf_header_unit" style="font-weight: bold; color: #555;"></p>
-                    <p id="pdf_header_sub" style="margin:5px 0;">Endereçado ao gestor da unidade</p>
+                    <h1 style="margin:0; color: #1e3a8a;">RELATÓRIO DE ACOLHIMENTO ACADÊMICO</h1>
+                    <p id="pdf_unidade_txt" style="font-weight: bold; font-size: 18px; margin: 10px 0; color: #444;"></p>
+                    <p>Destinatário: <b>Gestor Mário Menezes</b></p>
                 </div>
 
-                <div id="report_stats"></div>
+                <div class="pdf-stats" id="pdf_stats_area"></div>
                 
-                <div style="margin-top:30px;">
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 5px;">📝 Resumo Geral da Operação (Gerado Automaticamente)</h3>
-                    <div id="auto_summary_text" class="auto-summary-box"></div>
-                </div>
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 5px;">📝 Análise Situacional da Operação</h3>
+                <div id="auto_summary" class="auto-summary"></div>
 
-                <div class="student-notes-summary">
-                    <h3 style="border-bottom: 1px solid #eee; padding-bottom: 5px;">📋 Detalhamento das Situações Identificadas</h3>
-                    <div id="notes_list" style="font-size: 12px;"></div>
-                </div>
+                <h3 style="border-bottom: 2px solid #eee; padding-bottom: 5px;">📋 Detalhamento de Ocorrências e Feedbacks</h3>
+                <div id="notes_summary_list" style="font-size: 12px; line-height: 1.5;"></div>
 
-                <div class="pdf-footer">
-                    <p id="footer_nome" class="signature-font"></p>
-                    <p style="font-size: 10px; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Operador(a) / SmartTools Pro</p>
+                <div class="signature-area">
+                    <span id="sig_name" class="signature-name"></span>
+                    <div class="signature-line">Assinatura do Operador(a) / SmartTools Pro</div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // ================= CONFIGURAÇÃO FIREBASE =================
+        // CREDENCIAIS EXCLUSIVAS DO PROJETO ACOLHIMENTO
         const firebaseConfig = {
-            apiKey: "AGUARDANDO_SUAS_CREDENCIAIS",
-            authDomain: "disparador-ddb0c.firebaseapp.com",
-            projectId: "disparador-ddb0c",
-            storageBucket: "disparador-ddb0c.firebasestorage.app",
-            messagingSenderId: "158046191374",
-            appId: "1:158046191374:web:80d6fb6888f64ded4de15f",
-            measurementId: "G-4JZPJ3YDFL"
+            apiKey: "AIzaSyA9k4GebM4FibLhktfVIiOLgp85vBti2RQ",
+            authDomain: "acolhimentoacademico-92f02.firebaseapp.com",
+            projectId: "acolhimentoacademico-92f02",
+            storageBucket: "acolhimentoacademico-92f02.firebasestorage.app",
+            messagingSenderId: "835304828394",
+            appId: "1:835304828394:web:fd6e83fbfb1e4e78f7d693",
+            measurementId: "G-HBQCJW9GJX"
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // ================= SEGURANÇA =================
-        const MAX_DIARIO = 150;
-        const BATCH_SIZE = 25;
-        const MIN_DELAY = 10;
-        const MAX_DELAY = 30;
-        const LONG_PAUSE_MIN = 10;
-
         let rawData = [];
         let isLocked = false;
-        let sessionCount = 0;
-        let dailyCount = parseInt(localStorage.getItem('dailyCount')) || 0;
-        let lastDate = localStorage.getItem('lastDate') || new Date().toLocaleDateString();
 
-        if (lastDate !== new Date().toLocaleDateString()) {
-            dailyCount = 0;
-            localStorage.setItem('dailyCount', 0);
-            localStorage.setItem('lastDate', new Date().toLocaleDateString());
-        }
-
-        let currentFilters = {
-            unidade: localStorage.getItem('filter_unidade') || '',
-            status: localStorage.getItem('filter_status') || '',
-            search: localStorage.getItem('filter_search') || ''
-        };
-
-        // ================= FUNÇÃO DE CUMPRIMENTO DINÂMICO =================
-        function getGreeting() {
-            const hour = new Date().getHours();
-            if (hour >= 5 && hour < 12) return "Bom dia";
-            if (hour >= 12 && hour < 18) return "Boa tarde";
-            return "Boa noite";
-        }
-
-        function buildMessage(template, nome, unidade, curso) {
-            let msg = template
-                .replace(/\[NOME\]/g, nome)
-                .replace(/\[UNIDADE\]/g, unidade)
-                .replace(/\[CURSO\]/g, curso)
-                .replace(/\[CUMPRIMENTO\]/g, getGreeting());
-            
-            msg = msg.replace(/\{([^{}]+)\}/g, (match, content) => {
-                const choices = content.split('|');
-                return choices[Math.floor(Math.random() * choices.length)];
-            });
-            
-            msg += '\u200B'.repeat(Math.floor(Math.random() * 5));
-            return msg;
-        }
-
-        function getWhatsAppLink(telefone, nome, unidade, curso, template) {
-            const msg = buildMessage(template, nome, unidade, curso);
-            const tel = telefone.replace(/\D/g, '');
-            const fullTel = tel.startsWith('55') ? tel : '55' + tel;
-            return `https://wa.me/${fullTel}?text=${encodeURIComponent(msg)}`;
-        }
-
-        // ================= PERSISTÊNCIA MODELO =================
-        let currentTemplate = "";
-        async function saveTemplate() {
-            const template = document.getElementById('msg_template').value;
-            await db.collection("config").doc("messageTemplate").set({ template });
-            currentTemplate = template;
-            alert("Modelo de mensagem salvo!");
-        }
-
-        async function loadTemplate() {
-            const doc = await db.collection("config").doc("messageTemplate").get();
-            if (doc.exists) {
-                currentTemplate = doc.data().template;
-                document.getElementById('msg_template').value = currentTemplate;
-            } else {
-                currentTemplate = document.getElementById('msg_template').value;
-            }
-        }
-
-        // ================= CRUD ALUNOS =================
-        async function processCSV() {
-            const file = document.getElementById('csv_file').files[0];
-            if(!file) return alert("Selecione o arquivo CSV.");
-            
-            const btn = document.querySelector('[onclick="processCSV()"]');
-            btn.innerText = "⏳ Sincronizando Base de Alunos...";
-            btn.disabled = true;
-
-            const reader = new FileReader();
-            reader.readAsText(file, 'ISO-8859-1'); 
-            reader.onload = async function(e) {
-                const lines = e.target.result.split(/\r?\n/);
-                for(let i=1; i<lines.length; i++) {
-                    if(!lines[i].trim()) continue;
-                    const c = lines[i].split(';');
-                    if(c.length >= 4) {
-                        const id = c[0].trim();
-                        await db.collection("contatos").doc(id).set({
-                            id: id,
-                            nome: c[1].trim(),
-                            telefone: c[2].replace(/\D/g,''),
-                            unidade: c[3].trim(),
-                            curso: (c[4] || "Geral").trim(),
-                            status: 'Pendente',
-                            notas: '',
-                            timestamp: Date.now()
-                        }, { merge: true });
-                    }
-                }
-                alert("Base de Alunos sincronizada com sucesso!");
-                btn.innerText = "🚀 Sincronizar Base de Alunos";
-                btn.disabled = false;
-                await loadFromFirebase();
-                switchTab('tab-manage');
-            };
-        }
-
+        // --- CARREGAMENTO ---
         async function loadFromFirebase() {
             const snap = await db.collection("contatos").get();
             rawData = snap.docs.map(doc => doc.data());
-            rawData.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' }));
-            updateFiltersOptions();
-            applyFiltersAndRender();
-            updateSafetyUI();
-        }
-
-        function updateFiltersOptions() {
-            const units = [...new Set(rawData.map(i => i.unidade))].sort();
-            const el = document.getElementById('f_unidade');
-            el.innerHTML = '<option value="">Todas Unidades</option>';
-            units.forEach(u => el.innerHTML += `<option value="${u}" ${currentFilters.unidade === u ? 'selected' : ''}>${u}</option>`);
-            document.getElementById('f_status').value = currentFilters.status;
-            document.getElementById('search_term').value = currentFilters.search;
-        }
-
-        function applyFiltersAndRender() {
-            currentFilters.unidade = document.getElementById('f_unidade').value;
-            currentFilters.status = document.getElementById('f_status').value;
-            currentFilters.search = document.getElementById('search_term').value.toLowerCase();
-            localStorage.setItem('filter_unidade', currentFilters.unidade);
-            localStorage.setItem('filter_status', currentFilters.status);
-            localStorage.setItem('filter_search', currentFilters.search);
+            rawData.sort((a, b) => a.nome.localeCompare(b.nome));
             renderTable();
         }
 
         function renderTable() {
             const tbody = document.getElementById('table_body');
+            const search = document.getElementById('search_term').value.toLowerCase();
+            const filter = document.getElementById('f_status').value;
             tbody.innerHTML = '';
-            const filtered = rawData.filter(item => {
-                return (!currentFilters.unidade || item.unidade === currentFilters.unidade) &&
-                       (!currentFilters.status || item.status === currentFilters.status) &&
-                       (!currentFilters.search || item.nome.toLowerCase().includes(currentFilters.search) || item.id.toLowerCase().includes(currentFilters.search));
-            });
+
+            const filtered = rawData.filter(i => 
+                (i.nome.toLowerCase().includes(search) || i.id.includes(search)) &&
+                (!filter || i.status === filter)
+            );
+
             filtered.forEach(item => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                     <td><input type="checkbox" ${item.selected ? 'checked' : ''} onchange="toggleSelect('${item.id}')"></td>
-                     <td>${escapeHtml(item.id)}</td>
-                     <td><b>${escapeHtml(item.nome)}</b><br><small>${escapeHtml(item.curso)}</small></td>
-                     <td>${escapeHtml(item.unidade)}</td>
-                     <td>${escapeHtml(item.curso)}</td>
-                     <td>
-                        <select class="status-select" onchange="updateStatus('${item.id}', this.value)">
-                            <option value="Pendente" ${item.status === 'Pendente' ? 'selected' : ''}>Pendente</option>
-                            <option value="Enviado" ${item.status === 'Enviado' ? 'selected' : ''}>Enviado</option>
-                            <option value="Contato Incorreto" ${item.status === 'Contato Incorreto' ? 'selected' : ''}>Contato Incorreto</option>
+                    <td><code>${item.id}</code></td>
+                    <td><b>${item.nome}</b><br><small style="color:#666">${item.curso}</small></td>
+                    <td>
+                        <select onchange="updateStatus('${item.id}', this.value)" style="font-size:11px; width: auto;">
+                            <option value="Pendente" ${item.status === 'Pendente'?'selected':''}>Pendente</option>
+                            <option value="Enviado" ${item.status === 'Enviado'?'selected':''}>Enviado</option>
+                            <option value="Contato Incorreto" ${item.status === 'Contato Incorreto'?'selected':''}>Incorreto</option>
                         </select>
-                     </td>
-                     <td>
-                        <textarea class="comment-input" onblur="updateNotes('${item.id}', this.value)">${item.notas || ''}</textarea>
-                     </td>
-                     <td>
-                        <button class="btn btn-whatsapp" onclick="handleSend('${item.id}')">📱 ACOLHER</button>
-                     </td>
+                    </td>
+                    <td>
+                        <textarea class="comment-input" onblur="updateNotes('${item.id}', this.value)" placeholder="Descreva a situação acadêmica...">${item.notas || ''}</textarea>
+                    </td>
+                    <td><button class="btn btn-whatsapp" onclick="handleSend('${item.id}')">📱 ACOLHER</button></td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
-
-        async function updateStatus(id, newStatus) {
-            const item = rawData.find(x => x.id === id);
-            if(item) {
-                item.status = newStatus;
-                await db.collection("contatos").doc(id).update({ status: newStatus });
-                applyFiltersAndRender();
-            }
+        async function updateStatus(id, status) {
+            await db.collection("contatos").doc(id).update({ status });
+            const idx = rawData.findIndex(x => x.id === id);
+            rawData[idx].status = status;
         }
 
         async function updateNotes(id, notas) {
+            await db.collection("contatos").doc(id).update({ notas });
             const idx = rawData.findIndex(x => x.id === id);
-            if(idx !== -1) {
-                rawData[idx].notas = notas;
-                await db.collection("contatos").doc(id).update({ notas: notas });
-            }
+            rawData[idx].notas = notas;
+        }
+
+        function getGreeting() {
+            const h = new Date().getHours();
+            return h < 12 ? "Bom dia" : h < 18 ? "Boa tarde" : "Boa noite";
         }
 
         async function handleSend(id) {
-            if (isLocked) { alert("Segurança ativa! Aguarde o timer."); return; }
-            if (dailyCount >= MAX_DIARIO) { alert("Limite diário atingido! Volte amanhã."); return; }
+            if(isLocked) return alert("Aguarde o timer de segurança.");
+            const aluno = rawData.find(a => a.id === id);
+            const template = document.getElementById('msg_template').value;
             
-            const contato = rawData.find(c => c.id === id);
-            if (!contato) return;
-            
-            const link = getWhatsAppLink(contato.telefone, contato.nome, contato.unidade, contato.curso, currentTemplate);
-            window.open(link, '_blank');
-            
-            sessionCount++;
-            dailyCount++;
-            localStorage.setItem('dailyCount', dailyCount);
+            const msg = template
+                .replace(/\[NOME\]/g, aluno.nome)
+                .replace(/\[CURSO\]/g, aluno.curso)
+                .replace(/\[CUMPRIMENTO\]/g, getGreeting());
+
+            window.open(`https://wa.me/55${aluno.telefone}?text=${encodeURIComponent(msg)}`, '_blank');
             await updateStatus(id, 'Enviado');
-            await loadFromFirebase();
             
+            // Segurança Anti-Ban
             isLocked = true;
-            const bar = document.getElementById('safety-bar');
-            let isLong = sessionCount % BATCH_SIZE === 0;
-            let secondsWait = isLong ? (LONG_PAUSE_MIN * 60) : (Math.floor(Math.random() * (MAX_DELAY - MIN_DELAY + 1)) + MIN_DELAY);
-            
-            bar.className = isLong ? 'waiting' : 'locked';
-            let t = secondsWait;
+            document.getElementById('safety-bar').className = 'locked';
+            let timer = 12;
             const int = setInterval(() => {
-                const m = Math.floor(t / 60), s = t % 60;
-                document.getElementById('safety-main').innerText = isLong ? `☕ PAUSA LONGA: ${m}m ${s}s` : `⏳ PRÓXIMO EM: ${t}s`;
-                updateSafetyUI();
-                if (t-- <= 0) {
+                document.getElementById('safety-main').innerText = `⏳ INTERVALO DE SEGURANÇA: ${timer}s`;
+                if(timer-- <= 0) {
                     clearInterval(int);
                     isLocked = false;
-                    bar.className = 'safe';
-                    document.getElementById('safety-main').innerText = "✅ SISTEMA PRONTO";
-                    playSuccessBeep();
+                    document.getElementById('safety-bar').className = 'safe';
+                    document.getElementById('safety-main').innerText = "✅ SISTEMA DE ACOLHIMENTO ATIVO";
                 }
             }, 1000);
         }
 
-        function playSuccessBeep() {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.type = 'sine';
-                oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
-                gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime + 0.1);
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.1);
-            } catch (e) { console.log("Áudio não suportado"); }
-        }
-
-        function updateSafetyUI() {
-            document.getElementById('safety-sub').innerText = `Hoje: ${dailyCount}/${MAX_DIARIO} | Sessão: ${sessionCount}`;
-        }
-
-        function toggleSelect(id) {
-            const i = rawData.find(x => x.id === id);
-            if(i) i.selected = !i.selected;
-        }
-        
-        function toggleAll(src) {
-            rawData.forEach(i => i.selected = src.checked);
-            renderTable();
-        }
-        
-        async function bulkDeleteSelected() {
-            const selectedIds = rawData.filter(i => i.selected).map(i => i.id);
-            if(selectedIds.length === 0) return alert("Nenhum contato selecionado.");
-            if(confirm(`Excluir ${selectedIds.length} contato(s) permanentemente?`)) {
-                for(const id of selectedIds) {
-                    await db.collection("contatos").doc(id).delete();
-                }
-                await loadFromFirebase();
-            }
-        }
-
-        async function bulkUpdateStatus(newStatus) {
-            const selectedIds = rawData.filter(i => i.selected).map(i => i.id);
-            if(selectedIds.length === 0) return alert("Nenhum contato selecionado.");
-            for(const id of selectedIds) {
-                await db.collection("contatos").doc(id).update({ status: newStatus });
-            }
-            await loadFromFirebase();
-        }
-
-        // ================= RELATÓRIO AUTOMÁTICO =================
-        let reportData = { operador: '', unidade: '' };
-
-        async function loadReportInfo() {
-            const doc = await db.collection("config").doc("reportInfo").get();
-            if (doc.exists) {
-                reportData = doc.data();
-                document.getElementById('rep_operador').value = reportData.operador || '';
-                document.getElementById('rep_unidade').value = reportData.unidade || '';
-            } else {
-                document.getElementById('rep_operador').value = '';
-                document.getElementById('rep_unidade').value = '';
-            }
-        }
-        
-        async function saveReportInfo() {
-            reportData.operador = document.getElementById('rep_operador').value || '';
-            reportData.unidade = document.getElementById('rep_unidade').value || '';
-            await db.collection("config").doc("reportInfo").set(reportData);
-            renderReport();
-        }
-
-        function generateAutoText(enviados, total, incorretos, comNotasCount) {
-            if (total === 0) return "Nenhum aluno carregado na base.";
-            const perc = ((enviados / total) * 100).toFixed(1);
-            const data = new Date().toLocaleDateString();
+        // --- RELATÓRIO PDF ---
+        function updateReportView() {
+            const operador = document.getElementById('rep_operador').value;
+            const unidade = document.getElementById('rep_unidade').value;
             
-            let texto = `Prezado Gestor (Mário Menezes), informo que em ${data}, realizamos a operação de acolhimento acadêmico na unidade através da ferramenta SmartTools Pro. `;
-            texto += `Atingimos uma marca de ${enviados} alunos acolhidos com sucesso, o que representa ${perc}% da base de dados trabalhada. `;
-            
-            if(incorretos > (total * 0.15)) {
-                texto += `Observamos um volume expressivo de contatos incorretos (${incorretos}), sugerindo a necessidade de uma ação estratégica para higienização e atualização cadastral nos sistemas oficiais da unidade. `;
-            } else {
-                texto += `A qualidade da base de contatos trabalhada foi satisfatória. `;
-            }
+            document.getElementById('pdf_unidade_txt').innerText = `UNIDADE: ${unidade.toUpperCase()}`;
+            document.getElementById('sig_name').innerText = operador;
 
-            if(comNotasCount > 0) {
-                texto += `Durante os atendimentos, foram coletados ${comNotasCount} feedbacks específicos e detalhados sobre as dificuldades acadêmicas e situações de trancamento, listados abaixo para sua análise estratégica e tomada de decisão. `;
-            } else {
-                texto += `Os alunos acolhidos não apresentaram intercorrências acadêmicas críticas imediatas durante esta rodada de atendimento. `;
-            }
-
-            return texto;
-        }
-
-        function renderReport() {
-            if (!rawData.length) {
-                document.getElementById('report_stats').innerHTML = '<p>Nenhum dado carregado. Importe a base de alunos primeiro.</p>';
-                document.getElementById('notes_list').innerHTML = '';
-                return;
-            }
-            
             const total = rawData.length;
-            const enviados = rawData.filter(c => c.status === 'Enviado').length;
-            const incorretos = rawData.filter(c => c.status === 'Contato Incorreto').length;
-            const comNotas = rawData.filter(c => c.notas && c.notas.trim() !== "");
-            const operador = reportData.operador || "Não informado";
-            const unidade = reportData.unidade || "Não informada";
+            const enviados = rawData.filter(i => i.status === 'Enviado').length;
+            const incorretos = rawData.filter(i => i.status === 'Contato Incorreto').length;
+            const comNotas = rawData.filter(i => i.notas && i.notas.trim() !== "");
 
-            // Update header and footer
-            document.getElementById('pdf_header_unit').innerText = `UNIDADE: ${unidade.toUpperCase()}`;
-            document.getElementById('footer_nome').innerText = operador;
-
-            const statsHtml = `
-                <div class="report-stats">
-                    <div class="stat-card"><div class="stat-number">${total}</div><div>Total de Alunos</div></div>
-                    <div class="stat-card"><div class="stat-number">${enviados}</div><div>Acolhimentos Feitos</div></div>
-                    <div class="stat-card"><div class="stat-number">${incorretos}</div><div>Contatos Inválidos</div></div>
-                    <div class="stat-card"><div class="stat-number">${comNotas.length}</div><div>Feedbacks Acadêmicos</div></div>
-                </div>
+            document.getElementById('pdf_stats_area').innerHTML = `
+                <div class="stat-box"><b>Base Total</b><br><span style="font-size:20px">${total}</span></div>
+                <div class="stat-box"><b>Acolhidos</b><br><span style="font-size:20px; color:green">${enviados}</span></div>
+                <div class="stat-box"><b>Inconsistências</b><br><span style="font-size:20px; color:red">${incorretos}</span></div>
             `;
-            document.getElementById('report_stats').innerHTML = statsHtml;
-            
-            // Generate Auto Text
-            document.getElementById('auto_summary_text').innerText = generateAutoText(enviados, total, incorretos, comNotas.length);
 
-            // List notes
-            const list = document.getElementById('notes_list');
+            // Gerador de Texto Automático para o Gestor
+            const perc = total > 0 ? ((enviados/total)*100).toFixed(1) : 0;
+            let sumario = `Informo ao gestor Mário Menezes que a operação de acolhimento acadêmico obteve ${perc}% de cobertura da base. `;
+            if(incorretos > 0) sumario += `Identificamos ${incorretos} alunos com dados de contato inválidos que requerem atualização sistêmica. `;
+            if(comNotas.length > 0) sumario += `Durante os atendimentos, coletamos ${comNotas.length} feedbacks específicos sobre dificuldades acadêmicas que seguem listados abaixo para análise e providências.`;
+
+            document.getElementById('auto_summary').innerText = sumario;
+
+            const list = document.getElementById('notes_summary_list');
             list.innerHTML = '';
             comNotas.forEach(i => {
-                list.innerHTML += `<div class="student-note-item">
-                    <b>${i.nome} (${i.id}) - ${i.curso}:</b><br>
-                    <span style="color:#333;">${i.notas}</span>
-                </div>`;
+                list.innerHTML += `<p style="margin:8px 0; border-bottom: 1px dashed #eee; padding-bottom: 4px;">• <b>${i.nome} (${i.curso}):</b> ${i.notas}</p>`;
             });
         }
 
-        // ================= PDF GENERATION =================
         async function generatePDF() {
             const { jsPDF } = window.jspdf;
-            const element = document.getElementById('pdf-render-area');
-            
             const btn = event.target;
-            const originalText = btn.innerText;
-            btn.innerText = "⏳ Gerando PDF...";
-            btn.disabled = true;
+            btn.innerText = "⏳ Gerando...";
             
-            try {
-                // Adjust scaling for high quality and correct font rendering
-                const canvas = await html2canvas(element, {
-                    scale: 2, // Scale up for resolution
-                    useCORS: true, // Handle cross-origin resources
-                    logging: false, // Turn off logging
-                    allowTaint: true,
-                    backgroundColor: '#ffffff'
-                });
-                
-                const imgData = canvas.toDataURL('image/png');
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
-                
-                const width = pdf.internal.pageSize.getWidth();
-                const height = (canvas.height * width) / canvas.width;
-                
-                pdf.addImage(imgData, 'PNG', 0, 0, width, height);
-                pdf.save(`Relatorio_Acolhimento_${document.getElementById('rep_unidade').value || 'Geral'}_${new Date().toLocaleDateString()}.pdf`);
-            } catch (error) {
-                console.error('Erro ao gerar PDF:', error);
-                alert('Erro ao gerar PDF. Verifique se as fontes foram carregadas corretamente.');
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            const area = document.getElementById('pdf-export-zone');
+            const canvas = await html2canvas(area, { scale: 2 });
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const width = pdf.internal.pageSize.getWidth();
+            const height = (canvas.height * width) / canvas.width;
+            
+            pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, width, height);
+            pdf.save(`Relatorio_Acolhimento_${document.getElementById('rep_unidade').value || 'Geral'}.pdf`);
+            btn.innerText = "📄 Baixar Relatório PDF";
         }
 
-        // ================= NAVEGAÇÃO =================
-        async function switchTab(id) {
+        // --- IMPORTAÇÃO CSV ---
+        async function processCSV() {
+            const file = document.getElementById('csv_file').files[0];
+            if(!file) return alert("Selecione o arquivo CSV primeiro.");
+            
+            const reader = new FileReader();
+            reader.readAsText(file, 'ISO-8859-1'); 
+            reader.onload = async function(e) {
+                const lines = e.target.result.split(/\r?\n/);
+                for(let i=1; i<lines.length; i++) {
+                    const c = lines[i].split(';');
+                    if(c.length >= 4) {
+                        const id = c[0].trim();
+                        await db.collection("contatos").doc(id).set({
+                            id: id, nome: c[1].trim(), telefone: c[2].replace(/\D/g,''),
+                            unidade: c[3].trim(), curso: (c[4] || "Geral").trim(),
+                            status: 'Pendente', notas: '', timestamp: Date.now()
+                        }, { merge: true });
+                    }
+                }
+                alert("Base de alunos sincronizada com sucesso!");
+                loadFromFirebase();
+                switchTab('tab-manage');
+            };
+        }
+
+        function switchTab(id) {
             document.querySelectorAll('.tab-btn, .tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             document.querySelector(`[onclick="switchTab('${id}')"]`).classList.add('active');
-            if (id === 'tab-manage') {
-                await loadFromFirebase();
-            } else if (id === 'tab-reports') {
-                await loadReportInfo();
-                renderReport();
-            }
+            if(id === 'tab-reports') updateReportView();
         }
 
-        window.onload = async () => {
-            await loadTemplate();
-            await loadFromFirebase();
-            await loadReportInfo();
-            if (localStorage.getItem('filter_unidade')) {
-                currentFilters.unidade = localStorage.getItem('filter_unidade');
-            }
-            if (localStorage.getItem('filter_status')) {
-                currentFilters.status = localStorage.getItem('filter_status');
-            }
-            if (localStorage.getItem('filter_search')) {
-                currentFilters.search = localStorage.getItem('filter_search');
-            }
-            updateFiltersOptions();
-            applyFiltersAndRender();
-        };
+        window.onload = loadFromFirebase;
     </script>
 </body>
 </html>
